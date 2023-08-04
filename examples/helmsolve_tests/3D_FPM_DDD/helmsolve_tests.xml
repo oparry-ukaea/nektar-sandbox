@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <EXPANSIONS>
+        <E COMPOSITE="C[0]" NUMMODES="7" TYPE="MODIFIED" FIELDS="u" />
+    </EXPANSIONS>
+    <CONDITIONS>
+        <PARAMETERS>
+            <P> Lambda = 0 </P>
+            <P> xsize  = 5 </P>
+            <P> ysize  = 5 </P>
+            <P> zsize  = 10 </P>
+            <P> wx     = 1  </P>
+            <P> wy     = 1  </P>
+            <P> wz     = 2  </P>
+            <!-- Derived params to use in expressions-->
+            <P> cx = 2*PI*wx/xsize </P>
+            <P> cy = 2*PI*wy/ysize </P>
+            <P> cz = 2*PI*wz/zsize </P>
+        </PARAMETERS>
+
+        <SOLVERINFO>
+            <I PROPERTY="GlobalSysSoln" VALUE="IterativeStaticCond" />
+        </SOLVERINFO>
+
+        <VARIABLES>
+            <V ID="0"> u </V>
+        </VARIABLES>
+
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[1] </B> <!-- Low-x end -->
+            <B ID="1"> C[2] </B> <!-- High-x end -->
+            <B ID="2"> C[3] </B> <!-- Low-y end -->
+            <B ID="3"> C[4] </B> <!-- High-y end -->
+            <B ID="4"> C[5] </B> <!-- Low-z end -->
+            <B ID="5"> C[6] </B> <!-- High-z end -->
+        </BOUNDARYREGIONS>
+
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+                <D VAR="u" VALUE="sin(cx*x)*sin(cy*y)*sin(cz*z)" />
+            </REGION>
+            <REGION REF="1">
+                <D VAR="u" VALUE="sin(cx*x)*sin(cy*y)*sin(cz*z)" />
+            </REGION>
+
+            <REGION REF="2">
+                <D VAR="u" VALUE="sin(cx*x)*sin(cy*y)*sin(cz*z)" />
+            </REGION>
+            <REGION REF="3">
+                <D VAR="u" VALUE="sin(cx*x)*sin(cy*y)*sin(cz*z)" />
+           </REGION>
+
+            <REGION REF="4">
+                <D VAR="u" VALUE="sin(cx*x)*sin(cy*y)*sin(cz*z)" />
+            </REGION>
+            <REGION REF="5">
+                <D VAR="u" VALUE="sin(cx*x)*sin(cy*y)*sin(cz*z)" />
+            </REGION>
+        </BOUNDARYCONDITIONS>
+
+        <FUNCTION NAME="Forcing">
+            <E VAR="u" VALUE="-(cx*cx+cy*cy+cz*cz)*sin(cx*x)*sin(cy*y)*sin(cz*z)" />
+        </FUNCTION>
+
+        <FUNCTION NAME="ExactSolution">
+            <E VAR="u" VALUE="sin(cx*x)*sin(cy*y)*sin(cz*z)" />
+        </FUNCTION>
+    </CONDITIONS>
+</NEKTAR>
