@@ -23,6 +23,7 @@ endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 # Options to build different apps/tests
+option(HELMSOLVE_TESTS "Build tests for Helmsolve" ON)
 
 # Various sanitizers, including coverage and address sanitizer
 include(cmake/Sanitizers.cmake)
@@ -61,3 +62,10 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
   set(DBSYM_FLAG "")
 endif()
 set(BUILD_TYPE_COMPILE_FLAGS "${DBSYM_FLAG};${OPT_FLAG}")
+
+# ##############################################################################
+# Add subdirectories for all apps/tests that are enabled
+# ##############################################################################
+if(HELMSOLVE_TESTS)
+  add_subdirectory(helmsolve_tests)
+endif()

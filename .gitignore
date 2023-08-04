@@ -31,5 +31,8 @@
 *.out
 *.app
 
+# IDE config
+.vscode
+
 builds
 example-runs

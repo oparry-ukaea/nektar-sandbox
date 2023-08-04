@@ -1,0 +1,1 @@
+Test Helmsolve on some analytical solutions.
