@@ -18,9 +18,12 @@
 using namespace std;
 using namespace Nektar;
 
+namespace LU = Nektar::LibUtilities;
+namespace SD = Nektar::SpatialDomains;
+
 int main(int argc, char *argv[]) {
-  LibUtilities::SessionReaderSharedPtr vSession =
-      LibUtilities::SessionReader::CreateInstance(argc, argv);
+  LU::SessionReaderSharedPtr vSession =
+      LU::SessionReader::CreateInstance(argc, argv);
 
   LibUtilities::CommSharedPtr vComm = vSession->GetComm();
   MultiRegions::ContFieldSharedPtr Exp, Fce;
@@ -37,34 +40,11 @@ int main(int argc, char *argv[]) {
   }
 
   try {
-    LibUtilities::FieldIOSharedPtr fld =
-        LibUtilities::FieldIO::CreateDefault(vSession);
+    LU::FieldIOSharedPtr fld = LU::FieldIO::CreateDefault(vSession);
 
     //----------------------------------------------
     // Read in mesh from input file
-    SpatialDomains::MeshGraphSharedPtr graph3D =
-        SpatialDomains::MeshGraph::Read(vSession);
-    //----------------------------------------------
-
-    //----------------------------------------------
-    // Print summary of solution details
-    factors[StdRegions::eFactorLambda] = vSession->GetParameter("Lambda");
-    const SpatialDomains::ExpansionInfoMap &expansions =
-        graph3D->GetExpansionInfo();
-    LibUtilities::BasisKey bkey0 =
-        expansions.begin()->second->m_basisKeyVector[0];
-
-    if (vSession->GetComm()->GetRank() == 0) {
-      cout << "Solving 3D Helmholtz:" << endl;
-      cout << "  - Communication: " << vSession->GetComm()->GetType() << " ("
-           << vSession->GetComm()->GetSize() << " processes)" << endl;
-      cout << "  - Solver type  : " << vSession->GetSolverInfo("GlobalSysSoln")
-           << endl;
-      cout << "  - Lambda       : " << factors[StdRegions::eFactorLambda]
-           << endl;
-      cout << "  - No. modes    : " << bkey0.GetNumModes() << endl;
-      cout << endl;
-    }
+    SD::MeshGraphSharedPtr graph3D = SD::MeshGraph::Read(vSession);
     //----------------------------------------------
 
     //----------------------------------------------
@@ -74,7 +54,7 @@ int main(int argc, char *argv[]) {
     //----------------------------------------------
 
     //----------------------------------------------
-    // Set up coordinates of mesh for Forcing function evaluation
+    // Set up coordinates of mesh for function evaluation
     coordim = Exp->GetCoordim(0);
     nq = Exp->GetTotPoints();
 
@@ -93,24 +73,112 @@ int main(int argc, char *argv[]) {
     //----------------------------------------------
 
     //----------------------------------------------
-    // Set up variable coefficients if defined
-    if (vSession->DefinesFunction("d00")) {
+    // Set factors or variable coefficients if they were defined as parameters
+    // or functions (Lambda is required)
+    factors[StdRegions::eFactorLambda] = vSession->GetParameter("Lambda");
+
+    if (vSession->DefinesParameter("d00")) {
+      NekDouble d00;
+      vSession->LoadParameter("d00", d00, 1.0);
+      factors[StdRegions::eFactorCoeffD00] = d00;
+    } else if (vSession->DefinesFunction("d00")) {
       Array<OneD, NekDouble> d00(nq, 0.0);
       LibUtilities::EquationSharedPtr d00func = vSession->GetFunction("d00", 0);
       d00func->Evaluate(xc0, xc1, xc2, d00);
       varcoeffs[StdRegions::eVarCoeffD00] = d00;
     }
-    if (vSession->DefinesFunction("d11")) {
+
+    if (vSession->DefinesParameter("d01")) {
+      NekDouble d01;
+      vSession->LoadParameter("d01", d01, 1.0);
+      factors[StdRegions::eFactorCoeffD01] = d01;
+    } else if (vSession->DefinesFunction("d01")) {
+      Array<OneD, NekDouble> d01(nq, 0.0);
+      LibUtilities::EquationSharedPtr d01func = vSession->GetFunction("d01", 0);
+      d01func->Evaluate(xc0, xc1, xc2, d01);
+      varcoeffs[StdRegions::eVarCoeffD01] = d01;
+    }
+
+    if (vSession->DefinesParameter("d11")) {
+      NekDouble d11;
+      vSession->LoadParameter("d11", d11, 1.0);
+      factors[StdRegions::eFactorCoeffD11] = d11;
+    } else if (vSession->DefinesFunction("d11")) {
       Array<OneD, NekDouble> d11(nq, 0.0);
       LibUtilities::EquationSharedPtr d11func = vSession->GetFunction("d11", 0);
       d11func->Evaluate(xc0, xc1, xc2, d11);
       varcoeffs[StdRegions::eVarCoeffD11] = d11;
     }
-    if (vSession->DefinesFunction("d22")) {
+
+    if (vSession->DefinesParameter("d02")) {
+      NekDouble d02;
+      vSession->LoadParameter("d02", d02, 1.0);
+      factors[StdRegions::eFactorCoeffD02] = d02;
+    } else if (vSession->DefinesFunction("d02")) {
+      Array<OneD, NekDouble> d02(nq, 0.0);
+      LibUtilities::EquationSharedPtr d02func = vSession->GetFunction("d02", 0);
+      d02func->Evaluate(xc0, xc1, xc2, d02);
+      varcoeffs[StdRegions::eVarCoeffD02] = d02;
+    }
+
+    if (vSession->DefinesParameter("d12")) {
+      NekDouble d12;
+      vSession->LoadParameter("d12", d12, 1.0);
+      factors[StdRegions::eFactorCoeffD12] = d12;
+    } else if (vSession->DefinesFunction("d12")) {
+      Array<OneD, NekDouble> d12(nq, 0.0);
+      LibUtilities::EquationSharedPtr d12func = vSession->GetFunction("d12", 0);
+      d12func->Evaluate(xc0, xc1, xc2, d12);
+      varcoeffs[StdRegions::eVarCoeffD12] = d12;
+    }
+
+    if (vSession->DefinesParameter("d22")) {
+      NekDouble d22;
+      vSession->LoadParameter("d22", d22, 1.0);
+      factors[StdRegions::eFactorCoeffD22] = d22;
+    } else if (vSession->DefinesFunction("d22")) {
       Array<OneD, NekDouble> d22(nq, 0.0);
       LibUtilities::EquationSharedPtr d22func = vSession->GetFunction("d22", 0);
       d22func->Evaluate(xc0, xc1, xc2, d22);
       varcoeffs[StdRegions::eVarCoeffD22] = d22;
+    }
+
+    if (vSession->DefinesParameter("fn_vardiff")) {
+      NekDouble tau;
+      vSession->LoadParameter("fn_vardiff", tau, 1.0);
+      if (tau > 0) {
+        factors[StdRegions::eFactorTau] = 1.0;
+      }
+    }
+    //----------------------------------------------
+
+    // Retrieve basis key
+    const SD::ExpansionInfoMap &expansions = graph3D->GetExpansionInfo();
+    LU::BasisKey bkey0 = expansions.begin()->second->m_basisKeyVector[0];
+
+    // Print summary of solution details
+    if (vSession->GetComm()->GetRank() == 0) {
+      cout << "Solving 3D Helmholtz:" << endl;
+      cout << "  - Communication: " << vSession->GetComm()->GetType() << " ("
+           << vSession->GetComm()->GetSize() << " processes)" << endl;
+      cout << "  - Solver type  : " << vSession->GetSolverInfo("GlobalSysSoln")
+           << endl;
+      cout << "  - No. modes    : " << bkey0.GetNumModes() << endl;
+      cout << "  - Helmsolve params:" << endl;
+      cout << "    - Lambda : " << factors[StdRegions::eFactorLambda] << endl;
+
+      for (auto &coeff : {"d00", "d11", "d22"}) {
+        cout << "    - " << coeff << "    : ";
+        if (vSession->DefinesParameter(coeff)) {
+          cout << vSession->GetParameter(coeff);
+        } else if (vSession->DefinesFunction(coeff)) {
+          cout << "Defined via function";
+        } else {
+          cout << "Not set";
+        }
+        cout << endl;
+      }
+      cout << endl;
     }
     //----------------------------------------------
 
