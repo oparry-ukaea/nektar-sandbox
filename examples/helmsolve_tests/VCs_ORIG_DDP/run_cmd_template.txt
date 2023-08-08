@@ -1,0 +1,1 @@
+mpirun -np <NMPI> <APP_EXEC> helmsolve_tests.xml cuboid5x5x10.xml

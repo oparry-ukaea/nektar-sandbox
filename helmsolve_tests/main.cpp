@@ -171,7 +171,8 @@ int main(int argc, char *argv[]) {
         cout << "    - " << coeff << "    : ";
         if (vSession->DefinesParameter(coeff)) {
           cout << vSession->GetParameter(coeff);
-        } else if (vSession->DefinesFunction(coeff)) {
+        } else if (vSession->DefinesFunction(coeff) &&
+                   !vSession->DefinesParameter("skip_varcoeffs")) {
           cout << "Defined via function";
         } else {
           cout << "Not set";
@@ -200,7 +201,14 @@ int main(int argc, char *argv[]) {
     // Helmholtz solution taking physical forcing after setting
     // initial condition to zero
     Vmath::Zero(Exp->GetNcoeffs(), Exp->UpdateCoeffs(), 1);
-    Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), factors, varcoeffs);
+    if (vSession->DefinesParameter("skip_varcoeffs")) {
+      if (vSession->GetComm()->GetRank() == 0) {
+        cout << "***Ignoring varcoeffs in Helmsolve***" << endl;
+      }
+      Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), factors);
+    } else {
+      Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), factors, varcoeffs);
+    }
     //----------------------------------------------
 
     //----------------------------------------------
